@@ -1,6 +1,9 @@
 import Foundation
 import MapboxDirections
 
+/// Defines source of routing engine (online or offline) to be used for requests.
+public typealias RoutingProviderSource = MapboxRoutingProvider.Source
+
 /**
  Global settings that are used across the SDK for altering navigation behavior.
 
@@ -32,11 +35,14 @@ public class NavigationSettings {
 
     private struct State {
         static var `default`: State {
-            .init(directions: .shared, tileStoreConfiguration: .default)
+            .init(directions: .shared,
+                  tileStoreConfiguration: .default,
+                  routingProviderSource: .hybrid)
         }
 
         var directions: Directions
         var tileStoreConfiguration: TileStoreConfiguration
+        var routingProviderSource: RoutingProviderSource
     }
 
     /// Protects access to `_state`.
@@ -60,7 +66,7 @@ public class NavigationSettings {
     /**
      Default `Directions` instance. By default, `Directions.shared` is used.
 
-     You can override this property by using `NavigationSettings.initialize(directions:tileStoreConfiguration:)` method.
+     You can override this property by using `NavigationSettings.initialize(directions:tileStoreConfiguration:routingProviderSource:)` method.
      */
     public var directions: Directions {
         state.directions
@@ -69,12 +75,21 @@ public class NavigationSettings {
     /**
      Global `TileStoreConfiguration` instance.
 
-     You can override this property by using `NavigationSettings.initialize(directions:tileStoreConfiguration:)` method.
+     You can override this property by using `NavigationSettings.initialize(directions:tileStoreConfiguration:routingProviderSource:)` method.
      */
     public var tileStoreConfiguration: TileStoreConfiguration {
         state.tileStoreConfiguration
     }
 
+    /**
+     Default `routingProviderSource` used for rerouting during navigation. By default, `.hybrid` is used.
+
+     You can override this property by using `NavigationSettings.initialize(directions:tileStoreConfiguration:routingProviderSource:)` method.
+     */
+    public var routingProviderSource: RoutingProviderSource {
+        state.routingProviderSource
+    }
+    
     /**
      Initializes the settings with custom instances of globally used types.
 
@@ -88,16 +103,20 @@ public class NavigationSettings {
      fall back to the `NavigationSettings.directions` by default.
        - tileStoreConfiguration: Options for configuring how map and navigation tiles are stored on the device. See
      `TileStoreConfiguration` for more details.
+       - routingProviderSource: Configures the type of routing to be used by various SDK objects when providing route calculations. Use this value to configure usage of onlive vs. offline data for routing.
      */
     public func initialize(directions: Directions,
-                           tileStoreConfiguration: TileStoreConfiguration) {
+                           tileStoreConfiguration: TileStoreConfiguration,
+                           routingProviderSource: RoutingProviderSource) {
         lock.lock(); defer {
             lock.unlock()
         }
         if _state != nil {
-            print("Warning: Using NavigationSettings.initialize(directions:tileStoreConfiguration:) after corresponding variables was initialized. Possible reasons: Initialize called more than once, or the following properties was accessed before initialization: `tileStoreConfiguration`, `directions`. This might result in an undefined behaviour. ")
+            print("Warning: Using NavigationSettings.initialize(directions:tileStoreConfiguration:routingProviderSource:) after corresponding variables was initialized. Possible reasons: Initialize called more than once, or the following properties was accessed before initialization: `tileStoreConfiguration`, `directions`, `routingProviderSource`. This might result in an undefined behaviour. ")
         }
-        _state = .init(directions: directions, tileStoreConfiguration: tileStoreConfiguration)
+        _state = .init(directions: directions,
+                       tileStoreConfiguration: tileStoreConfiguration,
+                       routingProviderSource: routingProviderSource)
     }
     
     /**

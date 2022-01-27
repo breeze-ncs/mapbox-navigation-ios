@@ -5,7 +5,10 @@ import MapboxDirections
 // MARK: RouteController Rerouting logic
 /**
  Maximum number of meters the user can travel away from step before `RouteControllerShouldReroute` is emitted.
+ 
+ - important: Only works for `LegacyRouteController`.
  */
+@available(*, deprecated)
 public var RouteControllerMaximumDistanceBeforeRecalculating: CLLocationDistance = 50
 
 /**

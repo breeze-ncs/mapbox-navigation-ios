@@ -590,11 +590,6 @@ class NavigationServiceTests: TestCase {
             navigation.router.locationManager?(navigation.locationManager, didUpdateLocations: [$0])
             RunLoop.main.run(until: Date().addingTimeInterval(0.01))
         }
-        
-        // Make sure configurable delegate is called
-        expectation(description: "Should Prevent Reroutes delegate method called") {
-            self.delegate.recentMessages.contains("navigationService(_:shouldPreventReroutesWhenArrivingAt:)")
-        }
 
         // We should not reroute here because the user has arrived.
         expectation(description: "Reroute delegate method isn't called") {

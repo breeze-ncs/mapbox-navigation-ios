@@ -218,7 +218,7 @@ open class NavigationViewController: UIViewController, NavigationStatusPresenter
             ?? MapboxNavigationService(routeResponse: routeResponse,
                                        routeIndex: routeIndex,
                                        routeOptions: routeOptions,
-                                       routingProvider: NavigationSettings.shared.directions,
+                                       routingProvider: nil,
                                        credentials: NavigationSettings.shared.directions.credentials,
                                        simulating: navigationOptions?.simulationMode)
         navigationService.delegate = self
@@ -773,18 +773,14 @@ extension NavigationViewController: NavigationServiceDelegate {
             component.navigationService(service, didUpdate: progress, with: location, rawLocation: rawLocation)
         }
 
-        // If the user has arrived, don't snap the user puck.
-        // In case if user drives beyond the waypoint, we should accurately depict this.
-        guard let destination = progress.currentLeg.destination else {
-            preconditionFailure("Current leg has no destination")
-        }
-        let preventRerouting = navigationService.delegate?.navigationService(navigationService, shouldPreventReroutesWhenArrivingAt: destination) ?? RouteController.DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint
+        
+        let isNotRerouting = navigationService.router.userIsOnRoute(location)
         let userArrivedAtWaypoint = progress.currentLegProgress.userHasArrivedAtWaypoint && (progress.currentLegProgress.distanceRemaining <= 0)
 
         let roadName = roadName(at: location) ?? roadName(at: rawLocation)
         ornamentsController?.labelCurrentRoadName(suggestedName: roadName)
 
-        let movePuckToCurrentLocation = !(userArrivedAtWaypoint && snapsUserLocationAnnotationToRoute && preventRerouting)
+        let movePuckToCurrentLocation = !(userArrivedAtWaypoint && snapsUserLocationAnnotationToRoute && isNotRerouting)
         if movePuckToCurrentLocation {
             navigationMapView?.moveUserLocation(to: location, animated: true)
         }
@@ -931,12 +927,6 @@ extension NavigationViewController: NavigationServiceDelegate {
         for component in navigationComponents {
             component.navigationService(service, didEndSimulating: progress, becauseOf: reason)
         }
-    }
-    
-    public func navigationService(_ service: NavigationService, shouldPreventReroutesWhenArrivingAt waypoint: Waypoint) -> Bool {
-        let componentsWantPreventReroutes = navigationComponents.allSatisfy { $0.navigationService(service, shouldPreventReroutesWhenArrivingAt: waypoint) }
-
-        return componentsWantPreventReroutes && (delegate?.navigationViewController(self, shouldPreventReroutesWhenArrivingAt: waypoint)) ?? RouteController.DefaultBehavior.shouldRerouteFromLocation
     }
     
     public func navigationServiceShouldDisableBatteryMonitoring(_ service: NavigationService) -> Bool {
