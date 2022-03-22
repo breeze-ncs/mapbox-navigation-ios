@@ -553,10 +553,10 @@ open class NavigationViewController: UIViewController, NavigationStatusPresenter
         ]
         
         subviewInits.append { [weak self] in
-            if let topBanner = self?.addTopBanner(navigationOptions),
-               let bottomBanner = self?.addBottomBanner(navigationOptions) {
-                self?.ornamentsController?.embedBanners(topBanner: topBanner,
-                                                        bottomBanner: bottomBanner)
+            if let topBannerViewController = self?.addTopBanner(navigationOptions),
+               let bottomBannerViewController = self?.addBottomBanner(navigationOptions) {
+                self?.ornamentsController?.embedBanners(topBannerViewController: topBannerViewController,
+                                                        bottomBannerViewController: bottomBannerViewController)
             }
         }
         
@@ -781,11 +781,8 @@ extension NavigationViewController: NavigationServiceDelegate {
         let preventRerouting = navigationService.delegate?.navigationService(navigationService, shouldPreventReroutesWhenArrivingAt: destination) ?? RouteController.DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint
         let userArrivedAtWaypoint = progress.currentLegProgress.userHasArrivedAtWaypoint && (progress.currentLegProgress.distanceRemaining <= 0)
 
-        if snapsUserLocationAnnotationToRoute && (!userArrivedAtWaypoint || preventRerouting) {
-            ornamentsController?.labelCurrentRoad(at: rawLocation, suggestedName: roadName(at: rawLocation), for: location)
-        } else  {
-            ornamentsController?.labelCurrentRoad(at: rawLocation, suggestedName: roadName(at: rawLocation))
-        }
+        let roadName = roadName(at: location) ?? roadName(at: rawLocation)
+        ornamentsController?.labelCurrentRoadName(suggestedName: roadName)
 
         let movePuckToCurrentLocation = !(userArrivedAtWaypoint && snapsUserLocationAnnotationToRoute && preventRerouting)
         if movePuckToCurrentLocation {
@@ -992,7 +989,10 @@ extension NavigationViewController: StyleManagerDelegate {
     
     private func updateMapStyle(_ style: Style) {
         if navigationMapView?.mapView.mapboxMap.style.uri?.rawValue != style.mapStyleURL.absoluteString {
-            navigationMapView?.mapView.mapboxMap.style.uri = StyleURI(url: style.mapStyleURL)
+            let styleURI = StyleURI(url: style.mapStyleURL)
+            navigationMapView?.mapView.mapboxMap.style.uri = styleURI
+            // Update the sprite repository of wayNameView when map style changes.
+            ornamentsController?.updateStyle(styleURI: styleURI)
         }
         
         currentStatusBarStyle = style.statusBarStyle ?? .default
@@ -1057,7 +1057,11 @@ extension NavigationViewController: TopBannerViewControllerDelegate {
                 guard let currentStepIndex = banner.currentPreviewStep?.1 else { return }
                 let remainingSteps = progress.remainingSteps
                 let prevStepIndex = currentStepIndex.advanced(by: -1)
-                guard prevStepIndex >= 0 else { return }
+                guard prevStepIndex >= 0 else {
+                    banner.stopPreviewing()
+                    cameraController?.recenter(self)
+                    return
+                }
                 
                 let prevStep = remainingSteps[prevStepIndex]
                 preview(step: prevStep, in: banner, remaining: remainingSteps, route: route)
