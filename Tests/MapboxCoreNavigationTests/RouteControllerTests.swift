@@ -60,7 +60,7 @@ class RouteControllerTests: TestCase {
         let expectedCoordinates = locations.map(\.coordinate)
         XCTAssertEqual(expectedCoordinates, actualCoordinates)
     }
-    
+
     func testRerouteAfterArrival() {
         let coordinates = [
             CLLocationCoordinate2D(latitude: 37.750384, longitude: -122.387487),
@@ -85,7 +85,7 @@ class RouteControllerTests: TestCase {
                                               options: navigationRouteOptions,
                                               routingProvider: MapboxRoutingProvider(.offline),
                                               dataSource: self)
-        
+
         let routerDelegateSpy = RouterDelegateSpy()
         routeController.delegate = routerDelegateSpy
         
@@ -103,7 +103,7 @@ class RouteControllerTests: TestCase {
         let locationManager = ReplayLocationManager(locations: replayLocations)
         locationManager.startDate = Date()
         locationManager.delegate = routeController
-        
+
         let shouldRerouteCalled = expectation(description: "Reroute event should be called.")
         shouldRerouteCalled.assertForOverFulfill = false
         
@@ -119,7 +119,7 @@ class RouteControllerTests: TestCase {
             shouldPreventReroutesCalled.fulfill()
             return false
         }
-        
+
         let didRerouteCalled = expectation(description: "Did reroute event should be called.")
         didRerouteCalled.assertForOverFulfill = false
         
@@ -139,7 +139,7 @@ class RouteControllerTests: TestCase {
             }
             return nil
         }
-        
+
         let replayFinished = expectation(description: "Replay should be successfully finished.")
         locationManager.speedMultiplier = 50
         locationManager.replayCompletionHandler = { _ in
@@ -148,7 +148,7 @@ class RouteControllerTests: TestCase {
         }
         locationManager.startUpdatingLocation()
         wait(for: [replayFinished], timeout: locationManager.expectedReplayTime)
-        
+
         waitForExpectations(timeout: 1, handler: nil)
     }
 }

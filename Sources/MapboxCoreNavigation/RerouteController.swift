@@ -109,10 +109,7 @@ extension RerouteController: RerouteObserver {
                                    from: data)
     }
     
-    func onSwitchToAlternative(forAlternativeRouteId alternativeRouteId: String,
-                               routeResponse: String,
-                               routeRequest: String,
-                               origin: RouterOrigin) {
+    func onSwitchToAlternative(forRoute route: RouteInterface) {
         // to be filled with Continuous Alternatives implementation
     }
     

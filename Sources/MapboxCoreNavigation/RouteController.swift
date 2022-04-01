@@ -677,7 +677,7 @@ extension RouteController: Router {
         
         // If we still wait for the first status from NavNative, there is no need to reroute
         guard let status = status ?? sharedNavigator.mostRecentNavigationStatus else { return }
-        
+
         // NavNative doesn't support reroutes after arrival.
         // The code below is a port of logic from LegacyRouteController
         // This should be removed once NavNative adds support for reroutes after arrival.
@@ -689,14 +689,14 @@ extension RouteController: Router {
                  RouteController.DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint) {
                 return
             }
-            
+
             func userIsWithinRadiusOfDestination(location: CLLocation) -> Bool {
                 let lastStep = routeProgress.currentLegProgress.currentStep
                 let isCloseToFinalStep = location.isWithin(RouteControllerMaximumDistanceBeforeRecalculating,
                                                            of: lastStep)
                 return isCloseToFinalStep
             }
-            
+
             if !userIsWithinRadiusOfDestination(location: location) &&
                 (delegate?.router(self, shouldRerouteFrom: location)
                  ?? DefaultBehavior.shouldRerouteFromLocation) {
