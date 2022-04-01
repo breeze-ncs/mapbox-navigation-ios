@@ -184,7 +184,7 @@ open class RouteController: NSObject {
     // MARK: Controlling and Altering the Route
     
     var rerouteController: RerouteController {
-        Navigator.shared.rerouteController
+        sharedNavigator.rerouteController
     }
     
     public var reroutesProactively: Bool = true
@@ -347,6 +347,8 @@ open class RouteController: NSObject {
         updateVisualInstructionProgress(status: status)
         updateRoadName(status: status)
         updateDistanceToIntersection(from: snappedLocation)
+        
+        rerouteAfterArrivalIfNeeded(snappedLocation, status: status)
         
         if status.routeState != .complete {
             // Check for faster route proactively (if reroutesProactively is enabled)
@@ -659,6 +661,48 @@ extension RouteController: Router {
     
     public func userIsOnRoute(_ location: CLLocation, status: NavigationStatus?) -> Bool {
         return rerouteController.userIsOnRoute()
+    }
+    
+    func rerouteAfterArrivalIfNeeded(_ location: CLLocation, status: NavigationStatus?) {
+        guard let destination = routeProgress.currentLeg.destination else {
+            preconditionFailure("Route legs used for navigation must have destinations")
+        }
+        
+        // If the user has arrived, do not continue monitor reroutes, step progress, etc
+        if routeProgress.currentLegProgress.userHasArrivedAtWaypoint &&
+            (delegate?.router(self, shouldPreventReroutesWhenArrivingAt: destination) ??
+             DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint) {
+            return
+        }
+        
+        // If we still wait for the first status from NavNative, there is no need to reroute
+        guard let status = status ?? sharedNavigator.mostRecentNavigationStatus else { return }
+        
+        // NavNative doesn't support reroutes after arrival.
+        // The code below is a port of logic from LegacyRouteController
+        // This should be removed once NavNative adds support for reroutes after arrival.
+        if status.routeState == .complete {
+            // If the user has arrived and reroutes after arrival should be prevented, do not continue monitor
+            // reroutes, step progress, etc
+            if routeProgress.currentLegProgress.userHasArrivedAtWaypoint &&
+                (delegate?.router(self, shouldPreventReroutesWhenArrivingAt: destination) ??
+                 RouteController.DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint) {
+                return
+            }
+            
+            func userIsWithinRadiusOfDestination(location: CLLocation) -> Bool {
+                let lastStep = routeProgress.currentLegProgress.currentStep
+                let isCloseToFinalStep = location.isWithin(RouteControllerMaximumDistanceBeforeRecalculating,
+                                                           of: lastStep)
+                return isCloseToFinalStep
+            }
+            
+            if !userIsWithinRadiusOfDestination(location: location) &&
+                (delegate?.router(self, shouldRerouteFrom: location)
+                 ?? DefaultBehavior.shouldRerouteFromLocation) {
+                reroute(from: location, along: routeProgress)
+            }
+        }
     }
     
     public func reroute(from location: CLLocation, along progress: RouteProgress) {

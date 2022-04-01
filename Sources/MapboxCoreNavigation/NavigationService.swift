@@ -612,6 +612,10 @@ extension MapboxNavigationService: RouterDelegate {
         return shouldAutomaticallyAdvance
     }
     
+    public func router(_ router: Router, shouldPreventReroutesWhenArrivingAt waypoint: Waypoint) -> Bool {
+        return delegate?.navigationService(self, shouldPreventReroutesWhenArrivingAt: waypoint) ?? Default.shouldPreventReroutesWhenArrivingAtWaypoint
+    }
+    
     public func routerShouldDisableBatteryMonitoring(_ router: Router) -> Bool {
         return delegate?.navigationServiceShouldDisableBatteryMonitoring(self) ?? Default.shouldDisableBatteryMonitoring
     }

@@ -774,13 +774,19 @@ extension NavigationViewController: NavigationServiceDelegate {
         }
 
         
-        let isNotRerouting = navigationService.router.userIsOnRoute(location)
+        // If the user has arrived, don't snap the user puck.
+        // In case if user drives beyond the waypoint, we should accurately depict this.
+        guard let destination = progress.currentLeg.destination else {
+            preconditionFailure("Current leg has no destination")
+        }
+        let preventRerouting = navigationService.delegate?.navigationService(navigationService, shouldPreventReroutesWhenArrivingAt: destination) ?? RouteController.DefaultBehavior.shouldPreventReroutesWhenArrivingAtWaypoint
+        
         let userArrivedAtWaypoint = progress.currentLegProgress.userHasArrivedAtWaypoint && (progress.currentLegProgress.distanceRemaining <= 0)
 
         let roadName = roadName(at: location) ?? roadName(at: rawLocation)
         ornamentsController?.labelCurrentRoadName(suggestedName: roadName)
 
-        let movePuckToCurrentLocation = !(userArrivedAtWaypoint && snapsUserLocationAnnotationToRoute && isNotRerouting)
+        let movePuckToCurrentLocation = !(userArrivedAtWaypoint && snapsUserLocationAnnotationToRoute && preventRerouting)
         if movePuckToCurrentLocation {
             navigationMapView?.moveUserLocation(to: location, animated: true)
         }
@@ -931,6 +937,12 @@ extension NavigationViewController: NavigationServiceDelegate {
     
     public func navigationServiceShouldDisableBatteryMonitoring(_ service: NavigationService) -> Bool {
         return navigationComponents.allSatisfy { $0.navigationServiceShouldDisableBatteryMonitoring(service) }
+    }
+    
+    public func navigationService(_ service: NavigationService, shouldPreventReroutesWhenArrivingAt waypoint: Waypoint) -> Bool {
+        let componentsWantPreventReroutes = navigationComponents.allSatisfy { $0.navigationService(service, shouldPreventReroutesWhenArrivingAt: waypoint) }
+        
+        return componentsWantPreventReroutes && (delegate?.navigationViewController(self, shouldPreventReroutesWhenArrivingAt: waypoint)) ?? RouteController.DefaultBehavior.shouldRerouteFromLocation
     }
     
     public func navigationServiceDidChangeAuthorization(_ service: NavigationService, didChangeAuthorizationFor locationManager: CLLocationManager) {
