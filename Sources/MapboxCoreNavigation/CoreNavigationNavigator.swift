@@ -13,7 +13,7 @@ class Navigator {
      This property can only be modified before creating `Navigator` shared instance, all
      further changes to this property will have no effect.
      */
-    static var tilesVersion: String = ""
+    static var tilesVersion: String = "2022_03_10-03_00_00"
     
     private(set) var navigator: MapboxNavigationNative.Navigator
     
