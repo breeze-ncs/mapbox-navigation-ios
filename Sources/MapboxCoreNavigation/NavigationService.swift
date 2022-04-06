@@ -25,7 +25,7 @@ public protocol NavigationService: CLLocationManagerDelegate, RouterDataSource, 
     var directions: Directions { get }
     
     /**
-     `RoutingProvider`, used to create route.
+     `RoutingProvider`, used to create a route during refreshing or rerouting.
      */
     var routingProvider: RoutingProvider? { get }
     
@@ -329,7 +329,7 @@ public class MapboxNavigationService: NSObject, NavigationService {
      - parameter routeResponse: `RouteResponse` object, containing selection of routes to follow.
      - parameter routeIndex: The index of the route within the original `RouteResponse` object.
      - parameter routeOptions: The route options used to get the route.
-     - parameter routingProvider: Custom `RoutingProvider`, used to create route.
+     - parameter routingProvider: Custom `RoutingProvider`, used to create a route during refreshing or rerouting.
      - parameter credentials: Credentials to authorize additional data requests throughout the route.
      - parameter locationSource: An optional override for the default `NaviationLocationManager`.
      - parameter eventsManagerType: An optional events manager type to use while tracking the route.
@@ -431,9 +431,9 @@ public class MapboxNavigationService: NSObject, NavigationService {
     public lazy var directions: Directions = self.routingProvider as? Directions ?? NavigationSettings.shared.directions
     
     /**
-     Custom `RoutingProvider`, used to create route.
+     Custom `RoutingProvider`, used to create a route during refreshing or rerouting.
      
-     If set to `nil` - default implementation will be used.
+     If set to `nil` - default Mapbox implementation will be used.
      */
     public var routingProvider: RoutingProvider? {
         router.routingProvider

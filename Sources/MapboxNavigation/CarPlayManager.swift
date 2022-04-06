@@ -65,9 +65,9 @@ public class CarPlayManager: NSObject {
     public lazy var directions: Directions = self.routingProvider as? Directions ?? NavigationSettings.shared.directions
     
     /**
-     Custom `RoutingProvider`, used to create route.
+     Custom `RoutingProvider`, used to create a route during refreshing or rerouting.
      
-     If set to `nil` - default implementation will be used.
+     If set to `nil` - default Mapbox implementation will be used.
      */
     public var routingProvider: RoutingProvider
     

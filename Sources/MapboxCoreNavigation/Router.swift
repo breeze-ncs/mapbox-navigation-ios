@@ -77,7 +77,7 @@ public protocol Router: CLLocationManagerDelegate {
      
      - parameter routeIndex: The index of the route within the original `RouteResponse` object.
      - parameter routeResponse: `RouteResponse` object, containing selection of routes to follow.
-     - parameter routingProvider: `RoutingProvider`, used to create route.
+     - parameter routingProvider: `RoutingProvider`, used to create a route during refreshing or rerouting.
      - parameter source: The data source for the RouteController.
      */
     init(alongRouteAtIndex routeIndex: Int,
@@ -87,7 +87,7 @@ public protocol Router: CLLocationManagerDelegate {
          dataSource source: RouterDataSource)
     
     /**
-     `RoutingProvider`, used to create route.
+     `RoutingProvider`, used to create a route during refreshing or rerouting.
      */
     var routingProvider: RoutingProvider? { get }
     
